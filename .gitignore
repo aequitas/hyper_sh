@@ -8,3 +8,5 @@ ChangeLog
 *.egg-info
 *.egg
 sandbox
+.vscode
+__pycache__

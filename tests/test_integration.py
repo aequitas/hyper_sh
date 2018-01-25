@@ -1,23 +1,23 @@
 from unittest.case import SkipTest
 
-from hyper_sh import Client
+from hyper_sh import APIClient
 
 
 def assertSetup():
     try:
-        Client.guess_config()
-    except RuntimeError:
+        APIClient.guess_config()
+    except Exception:
         raise SkipTest("no default config is detected")
 
 
 def test_list_images():
     assertSetup()
-    c = Client()  # guess config
+    c = APIClient()  # guess config
     assert len(c.images()) != 0
 
 
 def test_create_container():
     assertSetup()
-    c = Client()  # guess config
+    c = APIClient()  # guess config
     cid = c.create_container("busybox")
     c.remove_container(cid, force=True)

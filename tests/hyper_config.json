@@ -1,0 +1,9 @@
+{
+	"clouds": {
+		"tcp://*.hyper.sh:443": {
+			"accesskey": "abc123",
+			"secretkey": "321cba",
+			"region": "us-west-1"
+		}
+	}
+}

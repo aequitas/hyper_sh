@@ -8,10 +8,10 @@ python:
 install:
 - pip install -e .
 - pip install flake8 yapf
-- pip install nose
+- pip install nose mock
 
 script:
-- yapf -dr hyper_sh tests
+- yapf -dr hyper_sh/*.py tests
 - flake8 hyper_sh/*.py tests
 - nosetests tests
 
