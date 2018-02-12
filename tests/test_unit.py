@@ -8,30 +8,30 @@ except ImportError:
     # Python < 3.3 compat
     from mock import patch
 
-from hyper_sh import APIClient
+from hyper_sh import Client, APIClient, from_env
 
 config_path = os.path.join(os.path.dirname(__file__), 'hyper_config.json')
 
 
 class TestConfig(TestCase):
     @patch.object(os, 'environ', {})
-    @patch.object(APIClient, 'DEFAULT_CONFIG_FILE', 'no_file.json')
+    @patch.object(Client, 'DEFAULT_CONFIG_FILE', 'no_file.json')
     def test_invalid_path(self):
         # Test no default file and no env vars.
-        with self.assertRaises(RuntimeError):
-            APIClient()
+        with self.assertRaises(TypeError):
+            Client()
 
         # Test file can't be found.
         with self.assertRaises(IOError):
-            APIClient('no_file.json')
+            Client('no_file.json')
 
         # Test invalid config.
-        with self.assertRaises(KeyError):
-            assert (APIClient({}))
+        with self.assertRaises(RuntimeError):
+            Client({})
 
         # Test invalid clouds.
         with self.assertRaises(RuntimeError):
-            assert (APIClient({'clouds': {'a': {}, 'b': {}}}))
+            Client({'clouds': {'a': {}, 'b': {}}})
 
     def test_valid_config(self):
         # Test with valid env vars.
@@ -41,31 +41,41 @@ class TestConfig(TestCase):
                     'HYPER_ACCESSKEY': 'abc123',
                     'HYPER_SECRETKEY': '321cba'
                 }):
-            assert (APIClient())
+            assert (isinstance(from_env(), Client))
 
         # Test with valid config file.
-        assert (APIClient(config_path))
+        assert (Client(config_path))
 
         # Test with valid config object.
         config = json.load(open(config_path))
-        assert (APIClient(config))
+        assert (Client(config))
+
+    def test_lowercase_envvars(self):
+        # Test with valid env vars.
+        with patch.object(
+                os, 'environ', {
+                    'hyper_endpoint': 'tcp://us-west-1.hyper.sh:443',
+                    'hyper_accesskey': 'abc123',
+                    'hyper_secretkey': '321cba'
+                }):
+            assert (isinstance(from_env(), Client))
 
     def test_valid_base_url(self):
         config = json.load(open(config_path))
-        c = APIClient(config)
+        api_client = APIClient(config=config)
 
         # Test base_url correct.
-        assert (c.base_url == 'https://us-west-1.hyper.sh:443')
+        assert (api_client.base_url == 'https://us-west-1.hyper.sh:443')
 
         # Test base_url includes correct region.
         endpoint = list(config['clouds'].keys())[0]
         region_config = {
             'clouds': {
-                'tcp://eu-west-1.hyper.sh:443': config['clouds'][endpoint]
+                'tcp://eu-central-1.hyper.sh:443': config['clouds'][endpoint]
             }
         }
-        c = APIClient(region_config)
-        assert (c.base_url == 'https://eu-west-1.hyper.sh:443')
+        api_client = APIClient(config=region_config)
+        assert (api_client.base_url == 'https://eu-central-1.hyper.sh:443')
 
     def test_auth_has_config(self):
         config = json.load(open(config_path))

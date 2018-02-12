@@ -14,7 +14,7 @@ import hmac
 from datetime import datetime
 from warnings import warn
 
-from .six import text_type
+from six import text_type
 
 
 class AWS4SigningKey:

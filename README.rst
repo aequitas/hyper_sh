@@ -1,57 +1,72 @@
-Hyper_sh
-========
+Python client for Hyper.sh
+==========================
 
 .. image:: https://api.travis-ci.org/tardyp/hyper_sh.svg?branch=master
    :alt: Build Status
 
-docker-py adapted to Hyper
+A wrapper around docker-py_ to support Hyper's authentication system.
 
-It uses underscore '_' instead of '-' in its name like the original `Hyper_` service, but you can actually install either spelling.
+Hyper uses Amazon's
+`Signature Version 4 <https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html>`_
+(dubbed AWS4) to authenticate against it's service. This library replaces's docker-py's auth
+module with a patched version of requests-aws4auth_ AWS4.
 
-This is a thin adaptation layer of docker-py for it to work with Hyper's credential scheme
-
-Install from pip
-================
+Installation
+============
 
 ::
 
     pip install hyper_sh
 
-How to use
-==========
+Usage
+=====
 
-hyper_sh is used with the same API as docker-py
+As hyper_sh is a wrapper around docker-py, the API is the same.
+See the `docker-py documentaiton <https://docker-py.readthedocs.io>`_.
 
-::
+The default usage, via the hyper_sh.from_env helper function, will
+automatically discover your Hyper configuration from environment
+variables and the default config file location:
+
+.. code-block:: python
+
+    import docker
+    client = docker.from_env()
+    print(client.images.list())
+
+One area the Hyper client differs from the Docker client is in the loading
+of config. The initializers of hyper_sh.Client and hyper_sh.APIClient
+require a positional argument for the config.
+
+This can be either the location of a Hyper config file:
+
+.. code-block:: python
 
     from hyper_sh import Client
-    c = APIClient()  # without argument, config is guessed by reading ~/.hyper/config.json
-    print c.images.list()
+    client = Client('path/to/config.json')
+    print(client.images.list())
 
-::
+or a valid Hyper config object:
 
-    from hyper_sh import APIClient
-    c = APIClient("path/to/config.json")  # you can pass a specific config.json
-    print c.images.list()
+.. code-block:: python
 
-::
-
-    from hyper_sh import APIClient
-    c = APIClient({'clouds': {
+    from hyper_sh import Client
+    client = Client({'clouds': {
         os.environ['HYPER_ENDPOINT']: {
-            "accesskey": os.environ['HYPER_ACCESSKEY'],
-            "secretkey": os.environ['HYPER_SECRETKEY']
+            'accesskey': os.environ['HYPER_ACCESSKEY'],
+            'secretkey': os.environ['HYPER_SECRETKEY']
         }
-    }})  # or you can give the content of a config.json directly
-    print c.images.list()
+    }})
+    print(client.images.list())
 
-API
-===
-At the moment, hyper_sh maps 1:1 to the api of docker-py, which means that some api will not work,
-as they are not supported by `Hyper_` - these will be marked as `IGNORED` in the `Hyper_` API docs.
+API support
+===========
 
-https://docker-py.readthedocs.io
-https://docs.hyper.sh/Reference/API/2016-04-04%20[Ver.%201.23]/
+Hyper doesn't support the full Docker API so some features of docker-py will not work. See the
+`Hyper_ API documentaiton <https://docs.hyper.sh/Reference/API/2016-04-04%20[Ver.%201.23]/>`_
+for details of their Docker API support (features not supported will be marked as IGNORED).
+Conversely, Hyper has features that do not exist in the Docker API, and these are not currently
+supported by hyper_sh.
 
-There are some other API supported by `Hyper_` that are not yet supported by this module (i.e. fip managment).
-Patches are welcome.
+.. _docker-py: https://github.com/docker/docker-py
+.. _requests-aws4auth: https://github.com/sam-washington/requests-aws4auth
